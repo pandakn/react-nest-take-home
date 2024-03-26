@@ -1,0 +1,46 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:alpine
+    container_name: blog-postgres
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB}
+    ports:
+      - ${POSTGRES_PORT}:5432
+    volumes:
+      - postgres-volumes:/var/lib/postgresql/data
+    restart: always
+
+  backend:
+    image: blog-take-home-api:latest
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: blog-backend
+    volumes:
+      - ./server:/usr/src/app/api
+      - /usr/src/app/api/node_modules
+    ports:
+      - 8080:8080
+    environment:
+      - POSTGRES_HOST=${POSTGRES_HOST}
+    depends_on:
+      - db
+
+  frontend:
+    image: blog-take-home-frontend:latest
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: blog-frontend
+    volumes:
+      - ./client:/usr/src/app/client
+      - /usr/src/app/client/node_modules
+    ports:
+      - 3000:3000
+
+volumes:
+  postgres-volumes:
